@@ -1,0 +1,9 @@
+[general]
+name=AutoLine
+qgisMinimumVersion=3.10
+version=1.0
+author=Jan Majcher
+email=jan.majcher@greenrebel.com
+description=AutoLine plans MBES and SSS survey lines using bathymetry and user-defined swath parameters with adaptive variable spacing, crosslines, and coverage estimation.
+about=Always review generated line plans. Estimated coverage ignores port/stbd swath variability. Plan conservatively to avoid gaps during operations.
+tags=multibeam, sonar, survey, hydrography, marine, line planning, SSS, MBES, bathymetry, QGIS
