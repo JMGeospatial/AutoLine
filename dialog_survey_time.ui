@@ -6,144 +6,143 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>306</width>
+    <width>328</width>
     <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>21</x>
-     <y>31</y>
-     <width>251</width>
-     <height>368</height>
-    </rect>
-   </property>
-   <layout class="QFormLayout" name="formLayout">
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_total_km">
-      <property name="text">
-       <string>Total distance (km)</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLineEdit" name="lineEdit_total_km"/>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_num_lines">
-      <property name="text">
-       <string>Number of lines</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLineEdit" name="lineEdit_num_lines"/>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label_speed">
-      <property name="text">
-       <string>Vessel speed (knots)</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QLineEdit" name="lineEdit_speed">
-      <property name="text">
-       <string>4</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="label_turn_time">
-      <property name="text">
-       <string>Turn time (min)</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLineEdit" name="lineEdit_turn_time">
-      <property name="text">
-       <string>20</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="0">
-     <widget class="QLabel" name="label_hours">
-      <property name="text">
-       <string>Daily hours</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="0">
-     <widget class="QComboBox" name="comboBox_hours">
-      <item>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_total_km">
        <property name="text">
-        <string>8</string>
+        <string>Total distance (km)</string>
        </property>
-      </item>
-      <item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLineEdit" name="lineEdit_total_km"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_num_lines">
        <property name="text">
-        <string>12</string>
+        <string>Number of lines</string>
        </property>
-      </item>
-      <item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLineEdit" name="lineEdit_num_lines"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_speed">
        <property name="text">
-        <string>24</string>
+        <string>Vessel speed (knots)</string>
        </property>
-      </item>
-     </widget>
-    </item>
-    <item row="10" column="0">
-     <widget class="QLabel" name="label_result_front">
-      <property name="text">
-       <string>Calculated days:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="0">
-     <widget class="QLabel" name="label_result">
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>[result will display here]</string>
-      </property>
-     </widget>
-    </item>
-    <item row="12" column="0">
-     <widget class="QLabel" name="label_path">
-      <property name="text">
-       <string>Output path (.csv)</string>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="0">
-     <widget class="QLineEdit" name="lineEdit_output_path"/>
-    </item>
-    <item row="13" column="1">
-     <widget class="QPushButton" name="pushButton_browse_output">
-      <property name="text">
-       <string>Browse</string>
-      </property>
-     </widget>
-    </item>
-    <item row="14" column="1">
-     <widget class="QPushButton" name="pushButton_calculate">
-      <property name="text">
-       <string>Calculate</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLineEdit" name="lineEdit_speed">
+       <property name="text">
+        <string>4</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_turn_time">
+       <property name="text">
+        <string>Turn time (min)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLineEdit" name="lineEdit_turn_time">
+       <property name="text">
+        <string>20</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_hours">
+       <property name="text">
+        <string>Daily hours</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QComboBox" name="comboBox_hours">
+       <item>
+        <property name="text">
+         <string>8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>12</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>24</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="label_result_front">
+       <property name="text">
+        <string>Calculated days:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="label_result">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For detailed info, look into the generated csv. This only shows the estimated survey days.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>[result will display here]</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="label_path">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This will contain all the input params, total turn time and survey days.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Output path (.csv)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLineEdit" name="lineEdit_output_path"/>
+     </item>
+     <item row="13" column="1">
+      <widget class="QPushButton" name="pushButton_browse_output">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="1">
+      <widget class="QPushButton" name="pushButton_calculate">
+       <property name="text">
+        <string>Calculate</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

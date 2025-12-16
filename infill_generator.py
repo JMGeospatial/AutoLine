@@ -2,13 +2,13 @@ from qgis.core import QgsCoordinateTransformContext
 
 
 
-def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, infill_output_path):
+def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, infill_output_path, log=None):
     from qgis.core import (
         QgsVectorLayer, QgsFields, QgsField, QgsFeature, QgsGeometry,
         QgsVectorFileWriter, QgsPointXY
     )
     from qgis import processing
-    from PyQt5.QtCore import QVariant
+    from qgis.PyQt.QtCore import QVariant
     import math
     import os
 
@@ -90,7 +90,10 @@ def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, 
             obb_feat = next(obb_result.getFeatures())
             segs = obb_feat.geometry().asPolygon()[0]
         except Exception as e:
-            print(f"⚠️ Failed to get OBB for gap feature: {e}")
+            if log:
+                log(f"⚠️ Failed to get OBB for gap feature: {e}")
+            else:
+                print(f"⚠️ Failed to get OBB for gap feature: {e}")
             continue
 
         maxlen, ux, uy = 0, 1, 0
@@ -126,6 +129,8 @@ def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, 
         infill_layer.crs(),
         "ESRI Shapefile")
 
-
-    print(f"🧩 {count} infill lines saved to: {infill_output_path}")
+    if log:
+        log(f"🧩 {count} infill lines saved to: {infill_output_path}")
+    else:
+        print(f"🧩 {count} infill lines saved to: {infill_output_path}")
     return infill_layer

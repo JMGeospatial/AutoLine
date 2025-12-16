@@ -32,8 +32,8 @@ def extend_line_asym(geom, start_ext, end_ext, buffer_geom):
     ux, uy = dx / length, dy / length
 
     # Over-extend far beyond requested range
-    long_start = QgsPointXY(p1.x() - ux * 5000, p1.y() - uy * 5000)
-    long_end   = QgsPointXY(p2.x() + ux * 5000, p2.y() + uy * 5000)
+    long_start = QgsPointXY(p1.x() - ux * 1000000, p1.y() - uy * 1000000)
+    long_end   = QgsPointXY(p2.x() + ux * 1000000, p2.y() + uy * 1000000)
     long_line  = QgsGeometry.fromPolylineXY([long_start, long_end])
 
     # Clip to buffered polygon
@@ -63,8 +63,8 @@ def extend_line_asym(geom, start_ext, end_ext, buffer_geom):
 #     dx, dy = p2.x() - p1.x(), p2.y() - p1.y()
 #     length = math.hypot(dx, dy)
 #     ux, uy = dx / length, dy / length
-#     long_p1 = QgsPointXY(p1.x() - ux * 5000, p1.y() - uy * 5000)
-#     long_p2 = QgsPointXY(p2.x() + ux * 5000, p2.y() + uy * 5000)
+#     long_p1 = QgsPointXY(p1.x() - ux * 1000000, p1.y() - uy * 1000000)
+#     long_p2 = QgsPointXY(p2.x() + ux * 1000000, p2.y() + uy * 1000000)
 #     long_line = QgsGeometry.fromPolylineXY([long_p1, long_p2])
 #     clipped = long_line.intersection(buffer_geom)
 #     clipped_seg = clipped.asPolyline() if not clipped.isMultipart() else max(
