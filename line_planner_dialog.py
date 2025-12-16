@@ -1,6 +1,7 @@
 # line_planner_dialog.py
 from qgis.PyQt import uic
-from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog, QMessageBox, QDialogButtonBox
 from . import main_line_planner
 import os
 import traceback
@@ -12,11 +13,65 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 class LinePlannerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, parent=None):
-        super().__init__(parent)
-        self.iface = iface
-        self.setupUi(self)
-        print("✨ Dialog launched")
-        self.init_logic()
+            super().__init__(parent)
+            self.iface = iface
+            self.setupUi(self)
+
+            self.progressBar.setRange(0, 100)
+            self.progressBar.setValue(0)
+            self.textLog.clear()
+
+            self.init_logic()
+            self.log("Dialog launched")
+
+            # Intercept OK button
+            # Intercept the OK button so it doesn't close the dialog
+            ok_button = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
+            if ok_button is not None:
+                try:
+                    ok_button.clicked.disconnect()
+                except TypeError:
+                    # no previous connection, ignore
+                    pass
+                ok_button.clicked.connect(self.on_ok_clicked)
+
+        
+    def on_ok_clicked(self):
+        # Switch to LOG tab immediately
+        try:
+            self.tabWidget.setCurrentIndex(1)  # index 1 = Log tab
+        except Exception:
+            pass
+
+        # Prevent dialog from closing
+        # (do NOT call accept() or reject())
+
+        # Start progress + logs
+        self.textLog.clear()
+        self.update_progress(0)
+        self.log("▶ Starting AutoLine...")
+
+        # Run the tool
+        self.run_planner()
+    
+    def log(self, message: str):
+        """
+        Send a message to the Log tab and to the console.
+        """
+        message = str(message)
+        print(message)
+        if hasattr(self, "textLog"):
+            self.textLog.append(message)
+            QtWidgets.QApplication.processEvents()
+
+    def update_progress(self, value: int):
+        """
+        Update progress bar (0–100).
+        """
+        if hasattr(self, "progressBar"):
+            self.progressBar.setRange(0, 100)
+            self.progressBar.setValue(int(value))
+            QtWidgets.QApplication.processEvents()
 
     def init_logic(self):
         # Populate layer dropdowns
@@ -28,7 +83,7 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
         QgsProject.instance().layerWasAdded.connect(self.refresh_layer_dropdowns)
         QgsProject.instance().layerWillBeRemoved.connect(self.refresh_layer_dropdowns)
 
-        self.buttonBox.accepted.connect(self.run_planner)
+        
         self.checkbox_generate.toggled.connect(self.toggle_generation_mode)
         self.toggle_generation_mode()
         self.radio_constant_spacing.toggled.connect(self.toggle_spacing_mode)
@@ -48,6 +103,7 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
         self.toggle_gap_logic()
         self.checkBox_stats.toggled.connect(self.toggle_stats_output)
         self.toggle_stats_output()
+        self.toggle_direction_mode()
 
         # Browse buttons
         self.browse_dem_path.clicked.connect(lambda: self.set_path_to_combobox(self.comboBox_dem, True, "Raster files (*.tif *.asc *.img *.vrt *.sdat)"))
@@ -62,14 +118,33 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
         self.pushButton_stats.clicked.connect(lambda: self.set_path_to_combobox(self.lineEdit_stats_path, False, "Text files (*.txt)"))
 
     def populate_layer_combobox(self, combo, layer_type):
+        combo.blockSignals(True)
         combo.clear()
+
+        # Placeholder → means “no selection”
+        combo.addItem("-- Select layer --", None)
+
         for layer in QgsProject.instance().mapLayers().values():
             if layer_type == 'raster' and isinstance(layer, QgsRasterLayer):
                 combo.addItem(layer.name(), layer.id())
-            elif layer_type == 'polygon' and isinstance(layer, QgsVectorLayer) and layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+
+            elif (
+                layer_type == 'polygon'
+                and isinstance(layer, QgsVectorLayer)
+                and layer.geometryType() == QgsWkbTypes.PolygonGeometry
+            ):
                 combo.addItem(layer.name(), layer.id())
-            elif layer_type == 'line' and isinstance(layer, QgsVectorLayer) and layer.geometryType() == QgsWkbTypes.LineGeometry:
+
+            elif (
+                layer_type == 'line'
+                and isinstance(layer, QgsVectorLayer)
+                and layer.geometryType() == QgsWkbTypes.LineGeometry
+            ):
                 combo.addItem(layer.name(), layer.id())
+
+        combo.setCurrentIndex(0)
+        combo.blockSignals(False)
+
 
     def refresh_layer_dropdowns(self):
         self.populate_layer_combobox(self.comboBox_dem, 'raster')
@@ -93,9 +168,14 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
             widget.setText(path)
 
     def resolve_layer_or_path(self, combo):
-        text = combo.currentText()
-        layers = QgsProject.instance().mapLayersByName(text)
-        return layers[0] if layers else text
+        layer_id = combo.currentData()
+        if layer_id:
+            layer = QgsProject.instance().mapLayer(layer_id)
+            if layer:
+                return layer
+        text = combo.currentText().strip()
+        return text or None
+
 
     def toggle_generation_mode(self):
         gen_enabled = self.checkbox_generate.isChecked()
@@ -181,9 +261,17 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
         self.pushButton_stats.setEnabled(enabled)
 
     def run_planner(self):
-        print("🟢 run_planner() triggered")
-        centerline_generate = 'Yes' if self.combo_surveydirection_mode.currentText() == 'Automatic' or \
-            (self.combo_surveydirection_mode.currentText() == 'Manual' and self.combo_manualdirection_mode.currentText() == 'Use manual heading') else 'No'
+        self.log("🟢 run_planner() triggered")
+        # (optional) don’t clear here, it’s already cleared in on_ok_clicked
+        self.update_progress(0)
+
+        centerline_generate = 'Yes' if (
+            self.combo_surveydirection_mode.currentText() == 'Automatic'
+            or (
+                self.combo_surveydirection_mode.currentText() == 'Manual'
+                and self.combo_manualdirection_mode.currentText() == 'Use manual heading'
+            )
+        ) else 'No'
 
         kwargs = {
             "Generate_new_line_plan": 'Yes' if self.checkbox_generate.isChecked() else 'No',
@@ -195,9 +283,13 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
             "Set_constant_mainline_spacing": 'Yes' if self.radio_constant_spacing.isChecked() else 'No',
             "Constant_line_spacing": self.spin_constant_spacing.value(),
             "Line_spacing_depth_mode": 'min' if self.combo_swath_mode.currentText() == 'Use min depth' else 'mean',
-            "Manual_heading_deg": self.spin_heading.value() if self.combo_surveydirection_mode.currentText() == 'Manual' and self.combo_manualdirection_mode.currentText() == 'Use manual heading' else None,
+            "Manual_heading_deg": (
+                self.spin_heading.value()
+                if self.combo_surveydirection_mode.currentText() == 'Manual'
+                and self.combo_manualdirection_mode.currentText() == 'Use manual heading'
+                else None
+            ),
             "centerline_generate": centerline_generate,
-            "sampling_interval": 1,
             "beam_angle_deg": self.spin_beam_angle.value(),
             "overlap_ratio": self.spin_overlap_ratio.value(),
             "extension_length": 200,
@@ -206,6 +298,7 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
             "run_out": self.spin_runout.value(),
             "output_dir": os.path.dirname(self.lineEdit_lineplan_output_path.text()),
             "tracklines_filename": "",
+            "depth_sampling_interval": self.spinDepthSampling.value(),
             "Infill_output_path": self.lineEdit_infills_path.text(),
             "coverage_path": self.lineEdit_coverage_path.text(),
             "gap_output_path": self.lineEdit_gaps_path.text(),
@@ -230,23 +323,31 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
         kwargs["existing_layer"] = existing_res if isinstance(existing_res, QgsVectorLayer) else None
         kwargs["Existing_lineplan_path"] = existing_res if isinstance(existing_res, str) else None
 
+        # attach callbacks
+        kwargs["log_callback"] = self.log
+        kwargs["progress_callback"] = self.update_progress
+
         try:
-            print("📱 Running main_line_planner with parameters:")
+            self.log("📱 Running main_line_planner with parameters:")
             for k, v in kwargs.items():
-                print(f"  {k}: {v}")
+                self.log(f"  {k}: {v}")
+
             main_line_planner.run_with_params(**kwargs)
-            print("✅ Planner finished successfully.")
+
+            self.update_progress(100)
+            self.log("✅ Line planning finished.")
         except Exception as e:
-            print("❌ Error running planner:")
-            print(e)
+            self.log("❌ Error running planner:")
+            self.log(str(e))
             traceback.print_exc()
             QMessageBox.critical(self, "Line Planner Error", str(e))
+        finally:
+            self.iface.messageBar().pushMessage(
+                "⚠️ AutoLine Notice",
+                "USE CAREFULLY. ALWAYS CHECK DYNAMIC LINE PLANS AGAINST TRADITIONAL LINE PLANS.\n"
+                "ESTIMATED COVERAGE IGNORES: SEABED CHANGE & ACROSS-TRACK SWATH VARIABILITY.\n"
+                "USE SAFETY BUFFERS. PLAN CONSERVATIVELY.",
+                level=Qgis.Warning,
+                duration=15
+            )
 
-        self.iface.messageBar().pushMessage(
-            "⚠️ AutoLine Notice",
-            "ALWAYS CHECK DYNAMIC LINE PLANS AGAINST CONSTANT SPACING.\n"
-            "ESTIMATED COVERAGE IGNORES: SEABED CHANGE & SWATH VARIABILITY.\n"
-            "USE SAFETY BUFFERS. PLAN CONSERVATIVELY.",
-            level=Qgis.Warning,
-            duration=15
-        )

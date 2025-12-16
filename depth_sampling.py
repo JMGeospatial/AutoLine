@@ -2,7 +2,7 @@ from qgis.core import QgsVectorLayer, QgsFeature
 import processing
 import math
 
-def sample_depth(line_geom, dem_layer, crs_authid, interval=1, mode='min'):
+def sample_depth(line_geom, dem_layer, crs_authid, depth_sampling_interval=5, mode='min',log=None):
     temp_line = QgsVectorLayer(f"LineString?crs={crs_authid}", "temp", "memory")
     prov = temp_line.dataProvider()
     feat = QgsFeature()
@@ -12,7 +12,7 @@ def sample_depth(line_geom, dem_layer, crs_authid, interval=1, mode='min'):
 
     points = processing.run("native:pointsalonglines", {
         'INPUT': temp_line,
-        'DISTANCE': interval,
+        'DISTANCE': depth_sampling_interval,
         'OUTPUT': 'memory:points'
     })['OUTPUT']
 
@@ -45,7 +45,10 @@ def sample_depth(line_geom, dem_layer, crs_authid, interval=1, mode='min'):
         'OUTPUT_HTML_FILE': 'TEMPORARY_OUTPUT'
     })
     mean_val = abs(stats['MEAN']) if 'MEAN' in stats else 5
-    print("⚠️ No depth values sampled for line. Using DEM mean value as fallback.")
+    if log:
+        log("⚠️ No depth values sampled for line. Using DEM mean value as fallback.")
+    else: 
+        print("⚠️ No depth values sampled for line. Using DEM mean value or 5 m as fallback.")
     return mean_val
 
 def compute_swath(depth, angle_deg=120, overlap=0.3):

@@ -49,5 +49,6 @@ class LinePlannerPlugin:
         self.dialog.show()
 
     def run_time_calculator(self):
-        dlg = SurveyTimeDialog()
-        dlg.exec_()
+        dlg = SurveyTimeDialog(self.iface.mainWindow())
+        dlg.exec()
+
