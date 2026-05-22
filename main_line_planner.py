@@ -2,7 +2,7 @@ import os
 import math
 from qgis.core import (
     QgsProject, QgsRasterLayer, QgsVectorLayer, QgsFields, QgsField,
-    QgsWkbTypes, QgsVectorFileWriter, QgsFeature
+    QgsWkbTypes, QgsVectorLayer, QgsVectorFileWriter, QgsFeature
 )
 from qgis.PyQt.QtCore import QVariant
 
@@ -281,16 +281,27 @@ def run_with_params(**kwargs):
     # Write tracklines (if requested)
     if trackline_path:
         trackline_fields = QgsFields()
-        trackline_fields.append(QgsField("id", QVariant.Int))
+        trackline_fields.append(QgsField("id", int))
 
-        writer = QgsVectorFileWriter(
-            trackline_path, "UTF-8", trackline_fields,
-            QgsWkbTypes.LineString, polygon_layer.crs(), "ESRI Shapefile"
+        # Build an in-memory layer, populate it, then write to disk
+        _tl_layer = QgsVectorLayer(
+            f"LineString?crs={polygon_layer.crs().authid()}", "tracklines", "memory"
         )
+        _tl_prov = _tl_layer.dataProvider()
+        _tl_prov.addAttributes(trackline_fields)
+        _tl_layer.updateFields()
+        _tl_prov.addFeatures([feat for _, _, feat in lines])
+        _tl_layer.updateExtents()
 
-        for _, _, feat in lines:
-            writer.addFeature(feat)
-        del writer
+        _tl_opts = QgsVectorFileWriter.SaveVectorOptions()
+        _tl_opts.driverName = "ESRI Shapefile"
+        _tl_opts.fileEncoding = "UTF-8"
+        _tl_err, _tl_msg = QgsVectorFileWriter.writeAsVectorFormatV2(
+            _tl_layer, trackline_path,
+            QgsProject.instance().transformContext(), _tl_opts
+        )
+        if _tl_err != QgsVectorFileWriter.WriterError.NoError:
+            log(f"⚠️ Trackline write warning: {_tl_msg}")
         log(f"✅ Tracklines written to: {trackline_path}")
         _add_shapefile_to_project(trackline_path, "AutoLine_Tracklines", log=log)
 
@@ -304,9 +315,14 @@ def run_with_params(**kwargs):
         if coverage_layer:
             _replace_layer_in_project(coverage_layer, "AutoLine_Coverage")
         gap_layer = find_coverage_gaps(polygon_layer, coverage_layer)
-        QgsVectorFileWriter.writeAsVectorFormat(
-            gap_layer, gap_output_path, "UTF-8", polygon_layer.crs(), "ESRI Shapefile"
-        )
+        if gap_output_path:
+            _gap_opts = QgsVectorFileWriter.SaveVectorOptions()
+            _gap_opts.driverName = "ESRI Shapefile"
+            _gap_opts.fileEncoding = "UTF-8"
+            QgsVectorFileWriter.writeAsVectorFormatV2(
+                gap_layer, gap_output_path,
+                QgsProject.instance().transformContext(), _gap_opts
+            )
         log(f"📂 Gap polygons saved to: {gap_output_path}")
         if gap_output_path:
             _add_shapefile_to_project(gap_output_path, "AutoLine_Gaps", log=log)

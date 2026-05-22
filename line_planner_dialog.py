@@ -11,6 +11,25 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), "dialog_line_planner.ui"
 ))
 
+# --- QGIS 3/4 geometry type compatibility ---
+try:
+    # QGIS >= 3.30 / QGIS 4.x: use Qgis.GeometryType enum
+    _POLY_TYPE = Qgis.GeometryType.Polygon
+    _LINE_TYPE = Qgis.GeometryType.Line
+except AttributeError:
+    # QGIS < 3.30: fall back to QgsWkbTypes constants
+    _POLY_TYPE = QgsWkbTypes.PolygonGeometry
+    _LINE_TYPE = QgsWkbTypes.LineGeometry
+
+def _geom_type_is(layer, kind):
+    gt = layer.geometryType()
+    if kind == 'polygon':
+        return gt == _POLY_TYPE
+    if kind == 'line':
+        return gt == _LINE_TYPE
+    return False
+
+
 class LinePlannerDialog(QDialog, FORM_CLASS):
     def __init__(self, iface, parent=None):
             super().__init__(parent)
@@ -131,14 +150,14 @@ class LinePlannerDialog(QDialog, FORM_CLASS):
             elif (
                 layer_type == 'polygon'
                 and isinstance(layer, QgsVectorLayer)
-                and layer.geometryType() == QgsWkbTypes.PolygonGeometry
+                and _geom_type_is(layer, 'polygon')
             ):
                 combo.addItem(layer.name(), layer.id())
 
             elif (
                 layer_type == 'line'
                 and isinstance(layer, QgsVectorLayer)
-                and layer.geometryType() == QgsWkbTypes.LineGeometry
+                and _geom_type_is(layer, 'line')
             ):
                 combo.addItem(layer.name(), layer.id())
 
