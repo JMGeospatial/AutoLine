@@ -39,7 +39,7 @@ def sample_depth(line_geom, dem_layer, crs_authid, depth_sampling_interval=5, mo
     if count > 0:
         return min_depth if mode == 'min' else (sum_depth / count)
 
-    stats = processing.run("qgis:rasterlayerstatistics", {
+    stats = processing.run("native:rasterlayerstatistics", {
         'INPUT': dem_layer,
         'BAND': 1,
         'OUTPUT_HTML_FILE': 'TEMPORARY_OUTPUT'

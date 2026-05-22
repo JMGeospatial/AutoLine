@@ -61,7 +61,7 @@ def build_coverage_layer(
     buffer_provider = buffer_union_layer.dataProvider()
 
     # Fields
-    buffer_provider.addAttributes([QgsField("line_id", QVariant.Int)])
+    buffer_provider.addAttributes([QgsField("line_id", int)])
     buffer_union_layer.updateFields()
 
     valid_feature_count = 0
@@ -89,7 +89,7 @@ def build_coverage_layer(
 
         midpoint_layer = QgsVectorLayer(f"Point?crs={crs_authid}", "midpoints", "memory")
         dp = midpoint_layer.dataProvider()
-        dp.addAttributes([QgsField("id", QVariant.Int)])
+        dp.addAttributes([QgsField("id", int)])
         midpoint_layer.updateFields()
 
         for i in range(len(pts) - 1):
@@ -165,7 +165,7 @@ def build_coverage_layer(
         QgsProject.instance().transformContext(),
         opts
     )
-    if err != QgsVectorFileWriter.NoError:
+    if err != QgsVectorFileWriter.WriterError.NoError:
         raise RuntimeError(f"Coverage write failed: {msg}")
 
     # Guarantee .prj exists

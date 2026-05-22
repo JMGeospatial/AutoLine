@@ -1,10 +1,11 @@
 [general]
 name=AutoLine
-qgisMinimumVersion=3.44
-supportsQt6=True
-version=2.0
+qgisMinimumVersion=3.16
+qgisMaximumVersion=4.99
+version=2.1
 author=Jan Majcher
 email=jan.majcher@greenrebel.com
 description=AutoLine plans MBES and SSS survey lines using bathymetry and user-defined swath parameters with adaptive variable spacing, crosslines, and coverage estimation.
 about=Apart from the adaptive spacing estimation, it is a basic line planning plugin. Always review generated line plans. Estimated coverage ignores port/stbd swath variability. Plan conservatively to avoid gaps during operations. Disclaimer: This plugin is provided as is and the author accepts no liability for any loss of operational time, data, revenue, or other damages arising from its use; all outputs must be independently reviewed by the user before operational deployment.
 tags=multibeam, sonar, survey, hydrography, marine, line planning, SSS, MBES, bathymetry, QGIS
+changelog=2.1 - QGIS 4.x / Qt6 compatibility: replaced deprecated QgsWkbTypes geometry constants, writeAsVectorFormat, QVariant field types, and old processing algorithm IDs.

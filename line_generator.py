@@ -171,7 +171,7 @@ def generate_side_lines(centerline_geom, crs_authid, dem_layer, buffer_geom, ext
 
                 cline = QgsVectorLayer(f"LineString?crs={crs_authid}", "crosslines", "memory")
                 provider = cline.dataProvider()
-                provider.addAttributes([QgsField("id", QVariant.Int)])
+                provider.addAttributes([QgsField("id", int)])
                 cline.updateFields()
 
                 centroid = polygon_geom.centroid().asPoint()
@@ -213,8 +213,13 @@ def generate_side_lines(centerline_geom, crs_authid, dem_layer, buffer_geom, ext
                 if crossline_output_path:
                     if not crossline_output_path.lower().endswith(".shp"):
                         crossline_output_path += ".shp"
-                    QgsVectorFileWriter.writeAsVectorFormat(
-                        cline, crossline_output_path, "UTF-8", cline.crs(), "ESRI Shapefile"
+                    _cl_opts = QgsVectorFileWriter.SaveVectorOptions()
+                    _cl_opts.driverName = "ESRI Shapefile"
+                    _cl_opts.fileEncoding = "UTF-8"
+                    from qgis.core import QgsProject
+                    QgsVectorFileWriter.writeAsVectorFormatV2(
+                        cline, crossline_output_path,
+                        QgsProject.instance().transformContext(), _cl_opts
                     )
                     if log:
                         log(f"📎 Crosslines saved to: {crossline_output_path}")
@@ -255,7 +260,7 @@ def generate_crosslines_from_lines(base_lines, crs_authid, polygon_geom,
 
     cline = QgsVectorLayer(f"LineString?crs={crs_authid}", "crosslines", "memory")
     provider = cline.dataProvider()
-    provider.addAttributes([QgsField("id", QVariant.Int)])
+    provider.addAttributes([QgsField("id", int)])
     cline.updateFields()
 
     centroid = polygon_geom.centroid().asPoint()
@@ -298,8 +303,13 @@ def generate_crosslines_from_lines(base_lines, crs_authid, polygon_geom,
     if crossline_output_path:
         if not crossline_output_path.lower().endswith(".shp"):
             crossline_output_path += ".shp"
-        QgsVectorFileWriter.writeAsVectorFormat(
-            cline, crossline_output_path, "UTF-8", cline.crs(), "ESRI Shapefile"
+        _cl_opts = QgsVectorFileWriter.SaveVectorOptions()
+        _cl_opts.driverName = "ESRI Shapefile"
+        _cl_opts.fileEncoding = "UTF-8"
+        from qgis.core import QgsProject
+        QgsVectorFileWriter.writeAsVectorFormatV2(
+            cline, crossline_output_path,
+            QgsProject.instance().transformContext(), _cl_opts
         )
         if log:
             log(f"📎 Crosslines saved to: {crossline_output_path}")

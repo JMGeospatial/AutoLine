@@ -5,7 +5,7 @@ from qgis.core import QgsCoordinateTransformContext
 def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, infill_output_path, log=None):
     from qgis.core import (
         QgsVectorLayer, QgsFields, QgsField, QgsFeature, QgsGeometry,
-        QgsVectorFileWriter, QgsPointXY
+        QgsVectorFileWriter, QgsPointXY, QgsProject
     )
     from qgis import processing
     from qgis.PyQt.QtCore import QVariant
@@ -13,7 +13,7 @@ def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, 
     import os
 
     infill_fields = QgsFields()
-    infill_fields.append(QgsField("id", QVariant.Int))
+    infill_fields.append(QgsField("id", int))
 
     infill_layer = QgsVectorLayer(f"LineString?crs={crs_authid}", "infill_lines", "memory")
     infill_provider = infill_layer.dataProvider()
@@ -80,7 +80,7 @@ def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, 
         temp_provider.addFeature(temp_feat)
         temp_layer.updateExtents()
 
-        obb_result = processing.run("qgis:minimumboundinggeometry", {
+        obb_result = processing.run("native:minimumboundinggeometry", {
             'INPUT': temp_layer,
             'TYPE': 1,
             'OUTPUT': 'memory:obb'
@@ -122,12 +122,16 @@ def generate_infills(gap_layer, all_lines, polygon_geom, dem_layer, crs_authid, 
     if not infill_output_path.lower().endswith(".shp"):
         infill_output_path += ".shp"
 
-    QgsVectorFileWriter.writeAsVectorFormat(
+    from qgis.core import QgsProject
+    _inf_opts = QgsVectorFileWriter.SaveVectorOptions()
+    _inf_opts.driverName = "ESRI Shapefile"
+    _inf_opts.fileEncoding = "UTF-8"
+    QgsVectorFileWriter.writeAsVectorFormatV2(
         infill_layer,
         infill_output_path,
-        "UTF-8",
-        infill_layer.crs(),
-        "ESRI Shapefile")
+        QgsProject.instance().transformContext(),
+        _inf_opts
+    )
 
     if log:
         log(f"🧩 {count} infill lines saved to: {infill_output_path}")
